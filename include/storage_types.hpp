@@ -30,7 +30,7 @@ public:
     ~IPackageQueue() override = default;
 
     virtual Package pop() = 0;
-    virtual PackageQueueType get_queue_type() const = 0;
+    //virtual PackageQueueType get_queue_type() const = 0;
 };
 
 
