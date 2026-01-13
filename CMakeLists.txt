@@ -4,5 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(NetSim)
 
+include_directories(include)
+
 add_executable(NetSim
-        src/main.cpp)
+        main.cpp)
