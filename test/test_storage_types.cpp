@@ -13,7 +13,7 @@ TEST(PackageQueueTest, IsFifoCorrect) {
     q.push(Package(1));
     q.push(Package(2));
 
-    Package p(std::move(q.pop()));
+    Package p(q.pop());
     EXPECT_EQ(p.get_id(), 1);
 
     p = q.pop();
@@ -25,7 +25,7 @@ TEST(PackageQueueTest, IsLifoCorrect) {
     q.push(Package(1));
     q.push(Package(2));
 
-    Package p(std::move(q.pop()));
+    Package p(q.pop());
     EXPECT_EQ(p.get_id(), 2);
 
     p = q.pop();
