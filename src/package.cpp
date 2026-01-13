@@ -5,6 +5,9 @@
 #include "package.hpp"
 #include "types.hpp"
 
+std::set<ElementID> Package::assigned_IDs = {};
+std::set<ElementID> Package::freed_IDs = {};
+
 Package::Package(){
     if (assigned_IDs.empty() && freed_IDs.empty()) {
         ID_ = 1;
