@@ -4,8 +4,6 @@
 
 #include "nodes.hpp"
 
-#include "helpers.hpp"
-
 void ReceiverPreferences::add_receiver(IPackageReceiver* ptr) {
     preferences_t_[ptr] = 0.0;
 
@@ -28,19 +26,18 @@ void ReceiverPreferences::remove_receiver(IPackageReceiver* ptr) {
 }
 
 IPackageReceiver* ReceiverPreferences::choose_receiver() {
-    auto prob = probability_generator();
-    if (prob >= 0 && prob <= 1) {
-        double distribution = 0.0;
-        for (auto &rec: preferences_t_) {
-            distribution = distribution + rec.second;
-            if (distribution < 0 || distribution > 1) {
-                return nullptr;
-            }
-            if (prob <= distribution) {
-                return rec.first;
-            }
-        }
-        return nullptr;
+    auto
+}
+void Worker::receive_package(Package &&p) {
+    queue->push(std::move(p));
+}
+void Worker::do_work(Time t) {
+    if (!processing_buffer.has_value() && !queue->empty()) {
+        package_processing_start_time=t;
+        processing_buffer.emplace(queue->pop());
     }
-    return nullptr;
+    if (t - package_processing_start_time + 1 == processing_duration) {
+        push_package(Package(processing_buffer.value().get_id()));
+        processing_buffer.reset();
+    }
 }

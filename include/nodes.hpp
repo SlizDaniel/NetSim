@@ -104,9 +104,9 @@ private:
 
 class Worker : public PackageSender,  public IPackageQueue {
 public:
-    Worker(ElementID id , TimeOffset pd , std::unique_ptr<IPackageQueue> q);
-
-    Time do_work ();
+    Worker(ElementID id , TimeOffset pd , Time t, std::unique_ptr<IPackageQueue> q) : id_(id), processing_duration(pd), package_processing_start_time(t),
+                                                                              queue(std::move(q)) {}
+    void do_work (Time t);
 
     TimeOffset get_processing_duration () const {return processing_duration;}
 
@@ -116,17 +116,17 @@ public:
 
     static ReceiverTypes get_receiver_type () {return ReceiverTypes::WORKER;}
 
-    void receive_package (Package&& p) override;
+    std::optional<Package> get_processing_buffer () const {return processing_buffer;}
 
-    Package receive_package () const override ;
+    void receive_package (Package&& p);
 
-    const_iterator end () const override;
+    const_iterator end () const override {return queue->end();}
 
-    const_iterator begin () const override;
+    const_iterator begin () const override {return queue->begin();}
 
-    const_iterator cend () const override;
+    const_iterator cend () const override {return queue->cend();}
 
-    const_iterator cbegin() const override;
+    const_iterator cbegin() const override {return queue->cbegin();}
 private:
     ElementID id_;
 
@@ -136,7 +136,7 @@ private:
 
     std::unique_ptr<IPackageQueue> queue;
 
-    std::optional<Package> processing_buffer;
+    std::optional<Package> processing_buffer = std::nullopt;
 };
 
 
