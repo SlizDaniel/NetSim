@@ -44,7 +44,9 @@ public:
     void remove_receiver(IPackageReceiver* ptr);
 
     static IPackageReceiver* choose_receiver();
-    const preferences_t& get_preferences() const;
+    const preferences_t& get_preferences() {
+        return this->preferences_t_;
+    };
 
     const_iterator begin() {
         return preferences_t_.begin();
@@ -56,6 +58,16 @@ public:
 private:
     std::map<IPackageReceiver*, double> preferences_t_;
     ProbabilityGenerator pg_;
+};
+
+class PackageSender{
+protected:
+    std::optional<Package> sending_buffer = std::nullopt;
+public:
+    PackageSender();
+    ReceiverPreferences preferences;
+    static void push_package (Package p);
+    void send_package ();
 };
 
 
