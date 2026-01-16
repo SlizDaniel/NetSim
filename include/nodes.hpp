@@ -22,13 +22,13 @@ public:
 
     virtual ElementID get_id() const = 0;
 
-    virtual const_iterator begin() const = 0;
+    virtual IPackageStockpile::const_iterator begin() const = 0;
 
-    virtual const_iterator end() const = 0;
+    virtual IPackageStockpile::const_iterator end() const = 0;
 
-    virtual const_iterator cbegin() const = 0;
+    virtual IPackageStockpile::const_iterator cbegin() const = 0;
 
-    virtual const_iterator cend() const = 0;
+    virtual IPackageStockpile::const_iterator cend() const = 0;
 
     virtual ~IPackageReceiver() = default;
 };
@@ -37,11 +37,25 @@ class ReceiverPreferences {
 public:
     using preferences_t = std::map<IPackageReceiver*, double>;
     using const_iterator = preferences_t::const_iterator;
+
+    ReceiverPreferences(ProbabilityGenerator pg) : pg_(std::move(pg)) {};
+
+    void add_receiver(IPackageReceiver* ptr);
+    void remove_receiver(IPackageReceiver* ptr);
+
+    static IPackageReceiver* choose_receiver();
     const preferences_t& get_preferences() const;
 
+    const_iterator begin() {
+        return preferences_t_.begin();
+    };
+    const_iterator end() {
+        return preferences_t_.end();
+    };
 
 private:
-    preferences_t preferences;
+    std::map<IPackageReceiver*, double> preferences_t_;
+    ProbabilityGenerator pg_;
 };
 
 
@@ -58,16 +72,16 @@ public:
 
     static ReceiverTypes get_receiver_type () {return ReceiverTypes::STOREHOUSE;}
 
-    const_iterator begin() const override {
+    IPackageStockpile::const_iterator begin() const override {
         return d_->begin();
     };
-    const_iterator end() const override {
+    IPackageStockpile::const_iterator end() const override {
         return d_->end();
     }
-    const_iterator cbegin() const override {
+    IPackageStockpile::const_iterator cbegin() const override {
         return d_->cbegin();
     }
-    const_iterator cend() const override {
+    IPackageStockpile::const_iterator cend() const override {
         return d_->cend();
     }
 

@@ -26,5 +26,5 @@ void ReceiverPreferences::remove_receiver(IPackageReceiver* ptr) {
 }
 
 IPackageReceiver* ReceiverPreferences::choose_receiver() {
-    return;
+    auto
 }
