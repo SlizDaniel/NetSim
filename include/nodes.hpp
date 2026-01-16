@@ -88,7 +88,7 @@ protected:
 
 class Storehouse : public IPackageReceiver {
 public:
-    Storehouse(ElementID id, std::unique_ptr<IPackageStockpile> d = std::make_unique<IPackageStockpile>())
+    Storehouse(ElementID id, std::unique_ptr<IPackageStockpile> d = std::make_unique<PackageQueue>(PackageQueueType::FIFO))
                 : id_(id), d_(std::move(d)) {}
     void receive_package(Package&& p) override;
     ElementID get_id() const override {
@@ -117,8 +117,8 @@ private:
 
 class Worker : public PackageSender,  public IPackageQueue {
 public:
-    Worker(ElementID id, TimeOffset pd, Time t_, std::unique_ptr<IPackageQueue> q)
-        :id_(id), processing_duration(pd), package_processing_start_time(t_), queue(std::move(q)) {
+    Worker(ElementID id, TimeOffset pd,std::unique_ptr<IPackageQueue> q)
+        :id_(id), processing_duration(pd), package_processing_start_time(0), queue(std::move(q)) {
     }
 
     void do_work (Time t);

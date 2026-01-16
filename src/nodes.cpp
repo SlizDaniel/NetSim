@@ -26,29 +26,33 @@ void ReceiverPreferences::remove_receiver(IPackageReceiver* ptr) {
 }
 
 IPackageReceiver* ReceiverPreferences::choose_receiver() {
-    auto prob = probability_generator();
-    if (prob >= 0 && prob <= 1) {
-        double distribution = 0.0;
-        for (auto &rec: preferences_t_) {
-            distribution = distribution + rec.second;
-            if (distribution < 0 || distribution > 1) {
-                return nullptr;
-            }
-            if (prob <= distribution) {
-                return rec.first;
-            }
+    double prob = pg_();
+
+    double cumulative_sum = 0.0;
+    for (auto const& [receiver, preference] : preferences_t_) {
+        cumulative_sum += preference;
+        if (prob <= cumulative_sum) {
+            return receiver;
         }
-        return nullptr;
     }
+
+    if (!preferences_t_.empty()) {
+        return preferences_t_.rbegin()->first;
+    }
+
     return nullptr;
 }
 
 void PackageSender::send_package() {
     if (!sending_buffer.has_value()) { return; }
 
-    IPackageReceiver* receiver = preferences.choose_receiver();
+    IPackageReceiver* receiver = receiver_preferences_.choose_receiver();
     receiver->receive_package(std::move(*sending_buffer));
     sending_buffer.reset();
+}
+
+void Storehouse::receive_package(Package&& p) {
+    d_->push(std::move(p));
 }
 
 void Worker::receive_package(Package &&p) {
