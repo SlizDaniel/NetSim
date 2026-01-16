@@ -43,7 +43,7 @@ public:
     using preferences_t = std::map<IPackageReceiver*, double>;
     using const_iterator = preferences_t::const_iterator;
 
-    ReceiverPreferences(ProbabilityGenerator pg) : pg_(std::move(pg)) {};
+    ReceiverPreferences(ProbabilityGenerator pg = probability_generator) : pg_(std::move(pg)) {};
 
     void add_receiver(IPackageReceiver* ptr);
     void remove_receiver(IPackageReceiver* ptr);
@@ -74,17 +74,18 @@ private:
 class PackageSender{
 public:
     PackageSender(ProbabilityGenerator pg = probability_generator)
-        : preferences(pg) {}
+            : receiver_preferences_(pg) {}
 
     PackageSender(PackageSender&&) = default;
     PackageSender& operator=(PackageSender&&) = default;
-    void push_package(Package&& p);
     void send_package();
     const std::optional<Package>& get_sending_buffer() const { return sending_buffer; };
     ReceiverPreferences receiver_preferences_;
 protected:
+    void push_package(Package&& moved_package) { sending_buffer.emplace(moved_package.get_id()); };
     std::optional<Package> sending_buffer = std::nullopt;
 };
+
 class Storehouse : public IPackageReceiver {
 public:
     Storehouse(ElementID id, std::unique_ptr<IPackageStockpile> d = std::make_unique<IPackageStockpile>())
@@ -116,8 +117,9 @@ private:
 
 class Worker : public PackageSender,  public IPackageQueue {
 public:
-    Worker(ElementID id, TimeOffset pd, std::unique_ptr<IPackageQueue> q)
-        : PackageSender(), id_(id), processing_duration(pd), queue(std::move(q)) {}
+    Worker(ElementID id, TimeOffset pd, Time t_, std::unique_ptr<IPackageQueue> q)
+        :id_(id), processing_duration(pd), package_processing_start_time(t_), queue(std::move(q)) {
+    }
 
     void do_work (Time t);
 
@@ -173,7 +175,7 @@ private:
 
 class Ramp : public PackageSender {
 public:
-    Ramp(ElementID id, TimeOffset time_offset) : id_(id), time_offset_(time_offset) {};
+    Ramp(ElementID id, TimeOffset time_offset) : id_(id), time_offset_(time_offset), t_(0) {};
 
     ElementID get_id () const {return id_;}
 
