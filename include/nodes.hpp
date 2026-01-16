@@ -9,6 +9,7 @@
 #include <memory>
 #include <optional>
 
+#include "helpers.hpp"
 #include "storage_types.hpp"
 
 enum class ReceiverTypes {
@@ -16,7 +17,6 @@ enum class ReceiverTypes {
 };
 
 class IPackageReceiver{
-
 public:
     virtual void receive_package(Package&& p) = 0;
 
@@ -30,7 +30,11 @@ public:
 
     virtual IPackageStockpile::const_iterator cend() const = 0;
 
+#if (defined EXERCISE_ID && EXERCISE_ID != EXERCISE_ID_NODES)
+    virtual ReceiverTypes get_receiver_type() const = 0;
+#endif
     virtual ~IPackageReceiver() = default;
+
 };
 
 class ReceiverPreferences {
@@ -43,16 +47,22 @@ public:
     void add_receiver(IPackageReceiver* ptr);
     void remove_receiver(IPackageReceiver* ptr);
 
-    static IPackageReceiver* choose_receiver();
+    IPackageReceiver* choose_receiver();
     const preferences_t& get_preferences() {
         return this->preferences_t_;
     };
 
-    const_iterator begin() {
+    const_iterator begin() const{
         return preferences_t_.begin();
     };
-    const_iterator end() {
+    const_iterator end() const{
         return preferences_t_.end();
+    };
+    const_iterator cbegin() const{
+        return preferences_t_.cbegin();
+    };
+    const_iterator cend() const {
+        return preferences_t_.cend();
     };
 
 private:
@@ -61,17 +71,20 @@ private:
 };
 
 class PackageSender{
+public:
+    PackageSender(ProbabilityGenerator pg = probability_generator)
+        : preferences(pg) {}
+
+    PackageSender(PackageSender&&) = default;
+    PackageSender& operator=(PackageSender&&) = default;
+    void push_package(Package&& p);
+    void send_package();
+    const std::optional<Package>& get_sending_buffer() const { return sending_buffer; };
+    ReceiverPreferences preferences;
 protected:
     std::optional<Package> sending_buffer = std::nullopt;
-public:
-    PackageSender();
-    ReceiverPreferences preferences;
-    static void push_package (Package p);
-    void send_package ();
 };
-
-
-class Storehouse : IPackageReceiver {
+class Storehouse : public IPackageReceiver {
 public:
     Storehouse(ElementID id, std::unique_ptr<IPackageStockpile> d) {
         this -> id_ = id;
@@ -82,7 +95,7 @@ public:
         return id_;
     }
 
-    static ReceiverTypes get_receiver_type () {return ReceiverTypes::STOREHOUSE;}
+    static ReceiverTypes get_receiver_type() { return ReceiverTypes::STOREHOUSE; }
 
     IPackageStockpile::const_iterator begin() const override {
         return d_->begin();
@@ -137,6 +150,14 @@ private:
     std::unique_ptr<IPackageQueue> queue;
 
     std::optional<Package> processing_buffer = std::nullopt;
+};
+
+class Ramp : public PackageSender {
+public:
+    Ramp(ElementID id, TimeOffset time_offset) :  PackageSender(), id_(id), time_offset_(time_offset) {};
+private:
+    ElementID id_;
+    TimeOffset time_offset_;
 };
 
 
