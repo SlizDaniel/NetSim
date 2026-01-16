@@ -42,6 +42,10 @@ private:
 
 class Storehouse : IPackageReceiver {
 public:
+    Storehouse(ElementID id, std::unique_ptr<IPackageStockpile> d) {
+        this -> id_ = id;
+        this -> d_ = std::move(d);
+    }
     void receive_package(Package&& p) override;
     ElementID get_id() const override {
         return id_;
@@ -63,6 +67,8 @@ public:
 private:
     ElementID id_;
     std::unique_ptr<IPackageStockpile> d_;
-}
+};
+
+
 
 #endif //NETSIM_NODES_HPP
