@@ -11,6 +11,7 @@
 
 #include "helpers.hpp"
 #include "storage_types.hpp"
+#include "config.hpp"
 
 enum class ReceiverTypes {
     WORKER , STOREHOUSE
@@ -80,16 +81,14 @@ public:
     void push_package(Package&& p);
     void send_package();
     const std::optional<Package>& get_sending_buffer() const { return sending_buffer; };
-    ReceiverPreferences preferences;
+    ReceiverPreferences receiver_preferences_;
 protected:
     std::optional<Package> sending_buffer = std::nullopt;
 };
 class Storehouse : public IPackageReceiver {
 public:
-    Storehouse(ElementID id, std::unique_ptr<IPackageStockpile> d) {
-        this -> id_ = id;
-        this -> d_ = std::move(d);
-    }
+    Storehouse(ElementID id, std::unique_ptr<IPackageStockpile> d = std::make_unique<IPackageStockpile>())
+                : id_(id), d_(std::move(d)) {}
     void receive_package(Package&& p) override;
     ElementID get_id() const override {
         return id_;
@@ -117,8 +116,9 @@ private:
 
 class Worker : public PackageSender,  public IPackageQueue {
 public:
-    Worker(ElementID id , TimeOffset pd , Time t, std::unique_ptr<IPackageQueue> q) : id_(id), processing_duration(pd), package_processing_start_time(t),
-                                                                              queue(std::move(q)) {}
+    Worker(ElementID id, TimeOffset pd, std::unique_ptr<IPackageQueue> q)
+        : PackageSender(), id_(id), processing_duration(pd), queue(std::move(q)) {}
+
     void do_work (Time t);
 
     TimeOffset get_processing_duration () const {return processing_duration;}
@@ -127,11 +127,14 @@ public:
 
     ElementID get_id () const {return id_;}
 
-    static ReceiverTypes get_receiver_type () {return ReceiverTypes::WORKER;}
+#if (defined EXERCISE_ID && EXERCISE_ID != EXERCISE_ID_NODES)
+    ReceiverTypes get_receiver_type() const override { return ReceiverTypes::WORKER; }
+#endif
 
-    std::optional<Package> get_processing_buffer () const {return processing_buffer;}
+    const std::optional<Package>& get_processing_buffer() const { return processing_buffer; }
 
     void receive_package (Package&& p);
+
 
     const_iterator end () const override {return queue->end();}
 
@@ -140,6 +143,22 @@ public:
     const_iterator cend () const override {return queue->cend();}
 
     const_iterator cbegin() const override {return queue->cbegin();}
+
+    void push(Package&& p) override {
+        queue->push(std::move(p));
+    }
+
+    bool empty() const override {
+        return queue->empty();
+    }
+
+    size_t size() const override {
+        return queue->size();
+    }
+
+    Package pop() override {
+        return queue->pop();
+    }
 private:
     ElementID id_;
 

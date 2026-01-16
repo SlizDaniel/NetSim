@@ -54,6 +54,7 @@ void PackageSender::send_package() {
 void Worker::receive_package(Package &&p) {
     queue->push(std::move(p));
 }
+
 void Worker::do_work(Time t) {
     if (!processing_buffer.has_value() && !queue->empty()) {
         package_processing_start_time=t;
