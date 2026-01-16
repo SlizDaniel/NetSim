@@ -33,4 +33,6 @@ target_include_directories(NetSim_test PUBLIC
 
 add_subdirectory(googletest-master)
 
+add_definitions(-DWITH_PROBABILITY_GENERATOR)
+
 target_link_libraries(NetSim_test gmock)

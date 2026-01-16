@@ -73,9 +73,7 @@ private:
 
 class PackageSender{
 public:
-    PackageSender(ProbabilityGenerator pg = probability_generator)
-            : receiver_preferences_(pg) {}
-
+    PackageSender() = default;  // Usuń parametr pg
     PackageSender(PackageSender&&) = default;
     PackageSender& operator=(PackageSender&&) = default;
     void send_package();
