@@ -173,10 +173,18 @@ private:
 
 class Ramp : public PackageSender {
 public:
-    Ramp(ElementID id, TimeOffset time_offset) :  PackageSender(), id_(id), time_offset_(time_offset) {};
+    Ramp(ElementID id, TimeOffset time_offset) : id_(id), time_offset_(time_offset) {};
+
+    ElementID get_id () const {return id_;}
+
+    Time get_time_offset_ () const {return time_offset_;}
+
+    void deliver_goods (Time t);
 private:
     ElementID id_;
     TimeOffset time_offset_;
+    std::optional<Package> buffer_;
+    Time t_;
 };
 
 

@@ -18,7 +18,8 @@ add_executable(NetSim_debug
 
 set(SOURCE_FILES_TESTS
         test/test_package.cpp
-        test/test_storage_types.cpp)
+        test/test_storage_types.cpp
+        test/test_nodes.cpp)
 
 add_executable(NetSim_test ${SOURCE_FILES} ${SOURCE_FILES_TESTS}
         test/main_gtest.cpp)

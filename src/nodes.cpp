@@ -65,3 +65,14 @@ void Worker::do_work(Time t) {
         processing_buffer.reset();
     }
 }
+
+void Ramp::deliver_goods(Time t) {
+    if (!buffer_) {
+        push_package(Package());
+        buffer_.emplace(id_);
+        t_ = t;
+    }
+    else if (t - time_offset_ == t_) {
+        push_package(Package());
+    }
+}
