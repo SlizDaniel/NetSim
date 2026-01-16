@@ -8,7 +8,6 @@
 #include <list>
 #include "package.hpp"
 
-using const_iterator = std::list<Package>::const_iterator;
 
 enum class PackageQueueType {
     FIFO,
@@ -17,6 +16,7 @@ enum class PackageQueueType {
 
 class IPackageStockpile {
     public:
+        using const_iterator = std::list<Package>::const_iterator;
         virtual ~IPackageStockpile() {}
         virtual void push(Package&& p) = 0;
         virtual bool empty() const = 0;
