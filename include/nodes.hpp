@@ -73,10 +73,13 @@ private:
 
 class PackageSender{
 public:
-    PackageSender() = default;  // Usuń parametr pg
+    PackageSender() = default;
     PackageSender(PackageSender&&) = default;
     PackageSender& operator=(PackageSender&&) = default;
     void send_package();
+    void remove_receiver(IPackageReceiver* receiver) {
+        receiver_preferences_.remove_receiver(receiver);
+    }
     const std::optional<Package>& get_sending_buffer() const { return sending_buffer; };
     ReceiverPreferences receiver_preferences_;
 protected:
@@ -93,7 +96,9 @@ public:
         return id_;
     }
 
-    static ReceiverTypes get_receiver_type() { return ReceiverTypes::STOREHOUSE; }
+#if (defined EXERCISE_ID && EXERCISE_ID != EXERCISE_ID_NODES)
+    ReceiverTypes get_receiver_type() const override { return ReceiverTypes::STOREHOUSE; }
+#endif
 
     IPackageStockpile::const_iterator begin() const override {
         return d_->begin();
