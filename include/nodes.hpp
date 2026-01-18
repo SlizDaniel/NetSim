@@ -113,9 +113,9 @@ private:
     std::unique_ptr<IPackageStockpile> d_;
 };
 
-class Worker : public PackageSender,  public IPackageQueue {
+class Worker : public PackageSender,  public IPackageReceiver {
 public:
-    Worker(ElementID id, TimeOffset pd,std::unique_ptr<IPackageQueue> q)
+    Worker(ElementID id, TimeOffset pd, std::unique_ptr<IPackageQueue> q)
         :id_(id), processing_duration(pd), package_processing_start_time(0), queue(std::move(q)) {
     }
 
@@ -125,40 +125,24 @@ public:
 
     Time get_package_processing_start_time () const {return package_processing_start_time;}
 
-    ElementID get_id () const {return id_;}
+    ElementID get_id () const override {return id_;}
 
-#if (defined EXERCISE_ID && EXERCISE_ID != EXERCISE_ID_NODES)
-    ReceiverTypes get_receiver_type() const override { return ReceiverTypes::WORKER; }
-#endif
+    #if (defined EXERCISE_ID && EXERCISE_ID != EXERCISE_ID_NODES)
+        ReceiverTypes get_receiver_type() const override { return ReceiverTypes::WORKER; }
+    #endif
 
     const std::optional<Package>& get_processing_buffer() const { return processing_buffer; }
 
-    void receive_package (Package&& p);
+    void receive_package (Package&& p) override;
 
+    IPackageStockpile::const_iterator end () const override {return queue->end();}
 
-    const_iterator end () const override {return queue->end();}
+    IPackageStockpile::const_iterator begin () const override {return queue->begin();}
 
-    const_iterator begin () const override {return queue->begin();}
+    IPackageStockpile::const_iterator cend () const override {return queue->cend();}
 
-    const_iterator cend () const override {return queue->cend();}
+    IPackageStockpile::const_iterator cbegin() const override {return queue->cbegin();}
 
-    const_iterator cbegin() const override {return queue->cbegin();}
-
-    void push(Package&& p) override {
-        queue->push(std::move(p));
-    }
-
-    bool empty() const override {
-        return queue->empty();
-    }
-
-    size_t size() const override {
-        return queue->size();
-    }
-
-    Package pop() override {
-        return queue->pop();
-    }
 private:
     ElementID id_;
 
