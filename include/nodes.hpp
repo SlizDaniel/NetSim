@@ -23,6 +23,8 @@ public:
 
     virtual ElementID get_id() const = 0;
 
+    virtual ReceiverTypes get_receiver_type() const = 0;
+
     virtual IPackageStockpile::const_iterator begin() const = 0;
 
     virtual IPackageStockpile::const_iterator end() const = 0;
@@ -49,7 +51,7 @@ public:
     void remove_receiver(IPackageReceiver* ptr);
 
     IPackageReceiver* choose_receiver();
-    const preferences_t& get_preferences() {
+    const preferences_t& get_preferences() const {
         return this->preferences_t_;
     };
 
@@ -89,6 +91,9 @@ protected:
 
 class Storehouse : public IPackageReceiver {
 public:
+    ReceiverTypes get_receiver_type() const override {
+        return ReceiverTypes::STOREHOUSE;
+    }
     Storehouse(ElementID id, std::unique_ptr<IPackageStockpile> d = std::make_unique<PackageQueue>(PackageQueueType::FIFO))
                 : id_(id), d_(std::move(d)) {}
     void receive_package(Package&& p) override;
@@ -122,6 +127,9 @@ class Worker : public PackageSender,  public IPackageReceiver {
 public:
     Worker(ElementID id, TimeOffset pd, std::unique_ptr<IPackageQueue> q)
         :id_(id), processing_duration(pd), package_processing_start_time(0), queue(std::move(q)) {
+    }
+    ReceiverTypes get_receiver_type() const override {
+        return ReceiverTypes::WORKER;
     }
 
     void do_work (Time t);
