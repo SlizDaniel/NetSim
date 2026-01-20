@@ -34,12 +34,26 @@ public:
     }
 
 
+
     void add(Node&& node) {
         container.push_back(std::move(node));
     }
-    void remove_by_id(ElementID id);
-    iterator find_by_id(ElementID id);
-    const_iterator find_by_id(ElementID id) const;
+    void remove_by_id(ElementID id) {
+        auto id_x = find_by_id(id);
+        if (id_x != container.end()) {
+            container.erase(id_x);
+        }
+    };
+    iterator find_by_id(ElementID id) {
+        return std::find_if(container.begin(), container.end(), [id](const Node& node) {
+            return node.get_id() == id;
+        });
+    };
+    const_iterator find_by_id(ElementID id) const {
+        return std::find_if(container.begin(), container.end(), [id](const Node& node) {
+            return node.get_id() == id;
+        });
+    };
 
 private:
     container_t container;
