@@ -47,9 +47,15 @@ private:
 
 class Factory {
 public:
-    void add_ramp(Ramp&& ramp);
-    void add_worker(Worker&& worker);
-    void add_storehouse(Storehouse&& storehouse);
+    void add_ramp(Ramp&& ramp) {
+        ramps.add(std::move(ramp));
+    }
+    void add_worker(Worker&& worker) {
+        workers.add(std::move(worker));
+    }
+    void add_storehouse(Storehouse&& storehouse) {
+        storehouses.add(std::move(storehouse));
+    }
 
     void remove_ramp(ElementID id) {
         ramps.remove_by_id(id);

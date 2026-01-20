@@ -26,3 +26,27 @@ void NodeCollection<Node>::remove_by_id(ElementID id){
         container.erase(id_x);
     }
 }
+
+//bool Factory::is_consistent(){
+//};
+
+void Factory::do_deliveries(Time t) {
+    for (Ramp &r : ramps) {
+        r.deliver_goods(t);
+    }
+}
+
+void Factory::do_package_passing() {
+    for (Worker &w : workers) {
+        w.send_package();
+    }
+    for (Ramp &r : ramps) {
+        r.send_package();
+    }
+}
+
+void Factory::do_work(Time t) {
+    for (Worker &w : workers) {
+        w.do_work(t);
+    }
+}
