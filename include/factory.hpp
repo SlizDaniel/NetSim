@@ -155,4 +155,17 @@ private:
     }
 };
 
+enum class ElementType {
+    WORKER , STOREHOUSE , RAMP , LINK
+};
+
+struct ParsedLineData {
+    ElementType elemtnt_type;
+    std::map<std::string , std::string> parameters;
+};
+
+ParsedLineData parse_line (std::string& line);
+
+Factory load_factory_structure (std::istream& is);
+
 #endif //NETSIM_FACTORY_HPP
