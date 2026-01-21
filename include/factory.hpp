@@ -160,7 +160,7 @@ enum class ElementType {
 };
 
 struct ParsedLineData {
-    ElementType elemtnt_type;
+    ElementType element_type;
     std::map<std::string , std::string> parameters;
 };
 

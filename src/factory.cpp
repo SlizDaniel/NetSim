@@ -5,6 +5,7 @@
 #include "factory.hpp"
 #include <stdexcept>
 #include "nodes.hpp"
+#include <sstream>
 
 
 bool has_reachable_storehouse(const PackageSender* sender,std::map<const PackageSender*,NodeColor>& node_colors){
@@ -82,4 +83,48 @@ void Factory::do_work(Time t) {
     for (Worker &w : workers) {
         w.do_work(t);
     }
+}
+
+ParsedLineData parse_line (std::string& line) {
+    std::vector<std::string> tokens;
+    std::string token;
+
+    std::istringstream stream_line(line);
+    char limiter = ' ';
+
+    while (std::getline(stream_line, token , limiter)) {
+        tokens.push_back(token);
+    }
+
+    ParsedLineData parsed_data;
+
+    std::map<std::string, ElementType> element_types {
+            {"LOADING_RAMP" , ElementType::RAMP},
+            {"WORKER" , ElementType::WORKER},
+            {"STOREHOUSE" , ElementType::STOREHOUSE},
+            {"LINK" , ElementType::LINK}};
+
+    try {
+        parsed_data.element_type = element_types.at(tokens[0]);
+
+        std::for_each(std::next(tokens.begin()), tokens.end(),[&parsed_data](const std::string& current_str) {
+            std::istringstream stream_str (current_str);
+            std::string str_;
+            std::vector<std::string> tokens_;
+            char limiter_ = '=';
+            while (std::getline(stream_str , str_ , limiter_)) {
+                tokens_.push_back(str_);
+            }
+            if (tokens_.size()==2){
+                parsed_data.parameters [tokens_[0]] = tokens_[1];
+            }
+            else {
+                throw std::invalid_argument("Invalid string structure!");
+            }
+        });
+    }
+    catch(std::out_of_range& v) {
+        throw std::invalid_argument("Invalid data type:(");
+    }
+    return parsed_data;
 }
