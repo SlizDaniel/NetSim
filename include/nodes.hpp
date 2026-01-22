@@ -156,6 +156,8 @@ public:
 
     IPackageStockpile::const_iterator cbegin() const override {return queue->cbegin();}
 
+    IPackageQueue* get_queue () const {return queue.get();}
+
 private:
     ElementID id_;
 
@@ -174,7 +176,7 @@ public:
 
     ElementID get_id () const {return id_;}
 
-    Time get_time_offset_ () const {return time_offset_;}
+    Time get_delivery_interval () const {return time_offset_;}
 
     void deliver_goods (Time t);
 private:

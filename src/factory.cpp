@@ -236,3 +236,64 @@ Factory load_factory_structure (std::istream& is) {
     return factory;
 }
 
+void write_receivers(std::ostream& os , const PackageSender& sender) {
+    auto preferences_ = sender.receiver_preferences_.get_preferences();
+    if (!preferences_.empty()) {
+        os<<"  Receivers:\n";
+        for (const auto& pair : preferences_) {
+            const IPackageReceiver* receiver_ = pair.first;
+            if (receiver_->get_receiver_type() == ReceiverTypes::WORKER) {
+                ElementID id_ = receiver_->get_id();
+                os<<"    worker #"<<id_<<"\n";
+            }
+            else if (receiver_->get_receiver_type() == ReceiverTypes::STOREHOUSE){
+                ElementID id_ = receiver_->get_id();
+                os<<"    storehouse #"<<id_<<"\n";
+            }
+            else {
+                throw std::invalid_argument("Incorrect receiver type");
+            }
+        }
+    }
+    os<<"\n";
+}
+
+std::string queue_to_str(PackageQueueType queue_) {
+    switch (queue_) {
+        case(PackageQueueType::FIFO): {
+            return "FIFO";
+        }
+        case(PackageQueueType::LIFO): {
+            return "LIFO";
+        }
+    }
+    return {};
+};
+
+void save_factory_structure (Factory& factory , std::ostream& os) {
+    //ramp worker storehouse link
+    os<<"== LOADING RAMPS ==\n\n";
+    std::for_each(factory.ramp_cbegin(), factory.ramp_cend(), [&](const Ramp& ramp) {
+        ElementID id_ = ramp.get_id();
+        TimeOffset delivery_interval_ = ramp.get_delivery_interval();
+        os<<"LOADING RAMP #"<<id_<<"\n  Delivery interval: "<<delivery_interval_;
+        write_receivers(os , ramp);
+    });
+    os<<"\n== WORKERS ==\n\n";
+    std::for_each(factory.worker_cbegin(), factory.worker_cend(), [&](const Worker& worker) {
+        ElementID id_ = worker.get_id();
+        Time processing_time_ = worker.get_processing_duration();
+        PackageQueueType queue_type_ = worker.get_queue()->get_queue_type();
+        os<<"WORKER #"<<id_<<"\n  Processing time: "<<processing_time_
+        <<"\n  Queue type: "<<queue_to_str(queue_type_);
+
+        write_receivers(os , worker);
+    });
+    os<<"\n== STOREHOUSES ==\n\n";
+    std::for_each(factory.storehouse_cbegin(), factory.storehouse_cend(), [&](const Storehouse& storehouse) {
+        ElementID id_ = storehouse.get_id();
+        os<<"STOREHOUSE #"<<id_<<"\n";
+    });
+    os.flush();
+}
+

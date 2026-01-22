@@ -32,7 +32,8 @@ public:
     ~IPackageQueue() override = default;
 
     virtual Package pop() = 0;
-    //virtual PackageQueueType get_queue_type() const = 0;
+
+    virtual PackageQueueType get_queue_type() const = 0;
 };
 
 class PackageQueue : public IPackageQueue {
@@ -64,6 +65,9 @@ public:
     const_iterator cend() const override {
         return package_list_.cend();
     };
+
+    PackageQueueType get_queue_type() const override {return queue_type_;}
+
 private:
     std::list<Package> package_list_;
     PackageQueueType queue_type_;
