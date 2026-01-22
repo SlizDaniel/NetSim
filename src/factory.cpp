@@ -151,8 +151,7 @@ PackageQueueType get_package_queue_type (std::string& type_string) {
 Factory load_factory_structure (std::istream& is) {
     Factory factory;
     std::string line;
-    char delimiter = ' ';
-    while(std::getline(is,line, delimiter)) {
+    while(std::getline(is,line)) {
         if (line.empty() || line[0]==';') {
             continue;
         }
@@ -163,7 +162,6 @@ Factory load_factory_structure (std::istream& is) {
                 ElementID id_ = std::stoi(parsed_line.parameters.at("id"));
                 TimeOffset processing_time_ = std::stoi(parsed_line.parameters.at("processing-time"));
                 PackageQueueType queue_type_ = get_package_queue_type (parsed_line.parameters.at("queue-type"));
-
                 Worker worker (id_,processing_time_, std::make_unique<PackageQueue>(queue_type_));
                 factory.add_worker(std::move(worker));
                 break;
@@ -176,7 +174,7 @@ Factory load_factory_structure (std::istream& is) {
             }
             case ElementType::RAMP: {
                 ElementID id_ = std::stoi(parsed_line.parameters.at("id"));
-                TimeOffset delivery_time = std::stoi(parsed_line.parameters.at("processing-time"));
+                TimeOffset delivery_time = std::stoi(parsed_line.parameters.at("delivery-interval"));
                 Ramp ramp (id_,delivery_time);
                 factory.add_ramp(std::move(ramp));
                 break;
@@ -202,20 +200,6 @@ Factory load_factory_structure (std::istream& is) {
                 ElementID dest_id = std::stoi(parsed_dest_with_minus[1]);
 
                 IPackageReceiver* package_receiver = nullptr;
-
-                switch (src_type){
-                    case NodeType::RAMP: {
-                        factory.find_ramp_by_id(src_id)->receiver_preferences_.add_receiver(package_receiver);
-                        break;
-                    }
-                    case NodeType::STOREHOUSE: {
-                        break;
-                    }
-                    case NodeType::WORKER: {
-                        factory.find_worker_by_id(src_id)->receiver_preferences_.add_receiver(package_receiver);
-                        break;
-                    }
-                }
                 switch (dest_type){
                     case NodeType::RAMP: {
                         break;
@@ -227,6 +211,21 @@ Factory load_factory_structure (std::istream& is) {
                     case NodeType::WORKER: {
                         package_receiver = &*factory.find_worker_by_id(dest_id);
                         break;
+                    }
+                }
+                if (package_receiver != nullptr) {
+                    switch (src_type){
+                        case NodeType::RAMP: {
+                            factory.find_ramp_by_id(src_id)->receiver_preferences_.add_receiver(package_receiver);
+                            break;
+                        }
+                        case NodeType::STOREHOUSE: {
+                            break;
+                        }
+                        case NodeType::WORKER: {
+                            factory.find_worker_by_id(src_id)->receiver_preferences_.add_receiver(package_receiver);
+                            break;
+                        }
                     }
                 }
                 break;
