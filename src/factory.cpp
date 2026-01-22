@@ -128,3 +128,111 @@ ParsedLineData parse_line (std::string& line) {
     }
     return parsed_data;
 }
+
+std::vector<std::string> parsed_with_minus (std::string line_) {
+    std::istringstream stream_line_ (line_);
+    std::string current_line;
+    std::vector<std::string> tokens_;
+    char delimiter = '-';
+    while (std::getline(stream_line_ , current_line,delimiter )) {
+        tokens_.push_back(current_line);
+    }
+    return tokens_;
+}
+
+PackageQueueType get_package_queue_type (std::string& type_string) {
+    std::map<std::string,PackageQueueType> str_to_type_map{
+    {"FIFO" , PackageQueueType::FIFO},
+    {"LIFO" , PackageQueueType::LIFO}};
+
+    return str_to_type_map.at(type_string);
+}
+
+Factory load_factory_structure (std::istream& is) {
+    Factory factory;
+    std::string line;
+    char delimiter = ' ';
+    while(std::getline(is,line, delimiter)) {
+        if (line.empty() || line[0]==';') {
+            continue;
+        }
+        ParsedLineData parsed_line = parse_line(line);
+
+        switch (parsed_line.element_type) {
+            case ElementType::WORKER: {
+                ElementID id_ = std::stoi(parsed_line.parameters.at("id"));
+                TimeOffset processing_time_ = std::stoi(parsed_line.parameters.at("processing-time"));
+                PackageQueueType queue_type_ = get_package_queue_type (parsed_line.parameters.at("queue-type"));
+
+                Worker worker (id_,processing_time_, std::make_unique<PackageQueue>(queue_type_));
+                factory.add_worker(std::move(worker));
+                break;
+                }
+            case ElementType::STOREHOUSE: {
+                ElementID id_ = std::stoi(parsed_line.parameters.at("id"));
+                Storehouse storehouse (id_);
+                factory.add_storehouse(std::move(storehouse));
+                break;
+            }
+            case ElementType::RAMP: {
+                ElementID id_ = std::stoi(parsed_line.parameters.at("id"));
+                TimeOffset delivery_time = std::stoi(parsed_line.parameters.at("processing-time"));
+                Ramp ramp (id_,delivery_time);
+                factory.add_ramp(std::move(ramp));
+                break;
+            }
+            case ElementType::LINK: {
+                enum class NodeType {
+                    RAMP , STOREHOUSE , WORKER
+                };
+                std::map<std::string , NodeType> nodes_str{
+                {"ramp" , NodeType::RAMP},
+                {"worker" , NodeType::WORKER},
+                {"store" , NodeType::STOREHOUSE}};
+
+                std::string src_str = parsed_line.parameters.at("src");
+                std::string dest_str = parsed_line.parameters.at("dest");
+
+                auto parsed_src_with_minus = parsed_with_minus(src_str);
+                NodeType src_type = nodes_str.at(parsed_src_with_minus[0]);
+                ElementID src_id = std::stoi(parsed_src_with_minus[1]);
+
+                auto parsed_dest_with_minus = parsed_with_minus(dest_str);
+                NodeType dest_type = nodes_str.at(parsed_dest_with_minus[0]);
+                ElementID dest_id = std::stoi(parsed_dest_with_minus[1]);
+
+                IPackageReceiver* package_receiver = nullptr;
+
+                switch (src_type){
+                    case NodeType::RAMP: {
+                        factory.find_ramp_by_id(src_id)->receiver_preferences_.add_receiver(package_receiver);
+                        break;
+                    }
+                    case NodeType::STOREHOUSE: {
+                        break;
+                    }
+                    case NodeType::WORKER: {
+                        factory.find_worker_by_id(src_id)->receiver_preferences_.add_receiver(package_receiver);
+                        break;
+                    }
+                }
+                switch (dest_type){
+                    case NodeType::RAMP: {
+                        break;
+                    }
+                    case NodeType::STOREHOUSE: {
+                        package_receiver = &*factory.find_storehouse_by_id(dest_id);
+                        break;
+                    }
+                    case NodeType::WORKER: {
+                        package_receiver = &*factory.find_worker_by_id(dest_id);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+    return factory;
+}
+
